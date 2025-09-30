@@ -4,3 +4,4 @@ openai==1.108.1
 dj-database-url==2.3.0
 whitenoise==6.7.0
 gunicorn==23.0.0
+psycopg[binary]==3.2.3
