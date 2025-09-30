@@ -26,12 +26,23 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-)#4ngz$j2b1*ld*!7um6ep(%^%(c*a5(q!i@3yax#$_i#n$wz3')
+# Prefer DJANGO_SECRET_KEY, fallback to SECRET_KEY for compatibility, then default
+SECRET_KEY = (
+    os.getenv('DJANGO_SECRET_KEY')
+    or os.getenv('SECRET_KEY')
+    or 'django-insecure-)#4ngz$j2b1*ld*!7um6ep(%^%(c*a5(q!i@3yax#$_i#n$wz3'
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
 
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1,.railway.app,.up.railway.app').split(',')
+
+# CSRF trusted origins (env-driven with safe defaults)
+CSRF_TRUSTED_ORIGINS = os.getenv(
+    'CSRF_TRUSTED_ORIGINS',
+    'https://*.railway.app,https://*.up.railway.app'
+).split(',')
 
 
 # Application definition
@@ -163,12 +174,8 @@ OPENROUTER_BASE_URL = os.getenv('OPENROUTER_BASE_URL', 'https://openrouter.ai/ap
 OPENROUTER_MODEL = os.getenv('OPENROUTER_MODEL', 'openai/gpt-5')
 
 # Security and proxy headers for Railway
-if not DEBUG:
-    CSRF_TRUSTED_ORIGINS = [
-        'https://*.railway.app',
-        'https://*.up.railway.app',
-    ]
-    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+# Ensure Django recognizes the original protocol behind the proxy
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # Log to stdout so platform logs capture Django errors
 LOGGING = {
