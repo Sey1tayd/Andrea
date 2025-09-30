@@ -1,0 +1,1892 @@
+{% load static %}
+<!doctype html>
+<html lang="tr" class="theme-aurora">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>{{ chat.title }} — Andrea v1</title>
+<meta name="chat-check-url" content="{% url 'chat:check' chat.id %}">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+/* ------------------ TEMEL DEĞİŞKENLER ------------------ */
+:root {
+  /* Aurora Theme (Deep Purple + Aqua) */
+  --bg: #0a0b0f;
+  --panel: #0f1115;
+  --sidebar: #0d0e12;
+  --text: #e5e7eb;
+  --muted: #9aa0a6;
+  --accent-1: #7C3AED;
+  --accent-2: #22D3EE;
+  --ring: #A78BFA;
+  --chip: #1a1b23;
+  --icon: #b7bdc9;
+  --green: #22c55e;
+  --red: #ef4444;
+  --divider: #1b1e22;
+  --input-bg: #0f1114;
+  --input-bd: #2a2f35;
+  --hover: #15181c;
+  --focus: #A78BFA;
+  --shadow: rgba(0, 0, 0, 0.3);
+  --shadow-lg: rgba(0, 0, 0, 0.5);
+  --composer-h: 140px; /* composer yüksekliği için fallback */
+  --gradient-bg: radial-gradient(ellipse at top, rgba(124, 58, 237, 0.1) 0%, transparent 50%),
+                 radial-gradient(ellipse at bottom, rgba(34, 211, 238, 0.08) 0%, transparent 50%);
+}
+
+/* Neon Theme (Pink/Ink + Cyan) */
+.theme-neon {
+  --bg: #0a0b0f;
+  --panel: #0f1115;
+  --sidebar: #0d0e12;
+  --text: #e5e7eb;
+  --muted: #9aa0a6;
+  --accent-1: #FF2D95;
+  --accent-2: #00EAFF;
+  --ring: #FF77C6;
+  --chip: #1a1b23;
+  --icon: #b7bdc9;
+  --green: #22c55e;
+  --red: #ef4444;
+  --divider: #1b1e22;
+  --input-bg: #0f1114;
+  --input-bd: #2a2f35;
+  --hover: #15181c;
+  --focus: #FF77C6;
+  --shadow: rgba(0, 0, 0, 0.3);
+  --shadow-lg: rgba(0, 0, 0, 0.5);
+  --gradient-bg: radial-gradient(ellipse at top, rgba(255, 45, 149, 0.1) 0%, transparent 50%),
+                 radial-gradient(ellipse at bottom, rgba(0, 234, 255, 0.08) 0%, transparent 50%);
+}
+
+* { box-sizing: border-box }
+html, body {
+  height: 100%; 
+  margin: 0; 
+  background: var(--bg);
+  background-position: center center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  color: var(--text);
+  font: 400 14px/1.45 "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial;
+  position: relative;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--gradient-bg);
+  pointer-events: none;
+  z-index: -1;
+  opacity: 0.85; /* GPU yükünü azalt */
+}
+
+button { font: inherit; color: inherit; background: none; border: none; padding: 0; cursor: pointer }
+a { color: #cfd3da; text-decoration: none }
+.visually-hidden { position: absolute!important; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0 }
+
+/* ------------------ YERLEŞİM ------------------ */
+.app{display:grid; grid-template-columns:260px 1fr; height:100%; overflow:hidden}
+
+/* ------------------ SİDEBAR ------------------ */
+.sidebar {
+  background: var(--sidebar); 
+  padding: 12px 12px 8px; 
+  display: flex; 
+  flex-direction: column; 
+  gap: 10px;
+  border-right: 1px solid var(--divider);
+  position: relative;
+}
+
+.sidebar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.03) 0%, rgba(34, 211, 238, 0.02) 100%);
+  pointer-events: none;
+}
+
+.theme-neon .sidebar::before {
+  background: linear-gradient(135deg, rgba(255, 45, 149, 0.03) 0%, rgba(0, 234, 255, 0.02) 100%);
+}
+
+.top-strip { 
+  display: flex; 
+  align-items: center; 
+  gap: 10px; 
+  height: 32px; 
+  padding: 4px 6px;
+  position: relative;
+  z-index: 1;
+}
+
+.theme-toggle {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  background: var(--chip);
+  border: 1px solid var(--divider);
+  display: grid;
+  place-items: center;
+  color: var(--icon);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.theme-toggle:hover {
+  background: var(--hover);
+  color: var(--accent-1);
+  border-color: var(--accent-1);
+}
+
+.theme-toggle:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.brand { 
+  margin-left: 6px; 
+  color: #cfd3da; 
+  font-weight: 600; 
+  letter-spacing: .2px; 
+  font-size: 14px;
+  position: relative;
+  z-index: 1;
+}
+
+.brand small { opacity: .7; font-weight: 500 }
+
+/* "Ana sayfa" düğmesi */
+.btn-chip {
+  display: flex; 
+  align-items: center; 
+  gap: 8px; 
+  height: 36px; 
+  padding: 0 10px;
+  background: var(--chip); 
+  border: 1px solid var(--divider); 
+  border-radius: 10px; 
+  color: var(--text);
+  transition: all 0.2s ease;
+  position: relative;
+  z-index: 1;
+}
+
+.btn-chip:hover {
+  background: var(--hover);
+  border-color: var(--accent-1);
+  box-shadow: 0 0 0 1px var(--accent-1);
+}
+
+.btn-chip:focus-visible { 
+  outline: 2px solid var(--ring); 
+  outline-offset: 2px 
+}
+
+.new-project { 
+  display: flex; 
+  align-items: center; 
+  gap: 10px; 
+  padding: 7px 8px; 
+  border-radius: 8px; 
+  color: #cfd3da; 
+  border: 1px dashed var(--divider);
+  transition: all 0.2s ease;
+  position: relative;
+  z-index: 1;
+}
+
+.new-project:hover {
+  border-color: var(--accent-1);
+  color: var(--accent-1);
+  background: rgba(124, 58, 237, 0.05);
+}
+
+.theme-neon .new-project:hover {
+  background: rgba(255, 45, 149, 0.05);
+}
+
+.menu { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; position: relative; z-index: 1; }
+.item { 
+  display: flex; 
+  align-items: center; 
+  gap: 10px; 
+  padding: 7px 8px; 
+  border-radius: 8px; 
+  color: #cfd3da;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.item:hover { 
+  background: var(--hover);
+  color: var(--text);
+}
+
+.item:focus-within { 
+  outline: 2px solid var(--ring); 
+  outline-offset: 2px 
+}
+
+/* Sidebar arama öğesi */
+.search-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 16px;
+  background: var(--chip);
+  border: 1px solid var(--divider);
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.search-item:focus-within {
+  border-color: var(--accent-1);
+  box-shadow: 0 0 0 1px var(--accent-1);
+}
+
+.search-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+  outline: none;
+  padding: 2px 4px;
+  margin: 0;
+  width: 100%;
+  min-width: 0;
+  border-radius: 8px;
+}
+
+.search-input::placeholder {
+  color: var(--muted);
+  transition: color 0.2s ease;
+}
+
+.search-input:focus::placeholder {
+  color: var(--accent-1);
+}
+
+/* daha güzel ikonlar */
+.icon {
+  width: 18px; 
+  height: 18px; 
+  color: var(--icon); 
+  display: inline-grid; 
+  place-items: center;
+  transition: color 0.2s ease;
+}
+
+.item:hover .icon {
+  color: var(--accent-1);
+}
+
+.icon svg { display: block }
+
+/* bölümler */
+.section-label { 
+  color: var(--muted); 
+  font-size: 12px; 
+  text-transform: uppercase; 
+  letter-spacing: .08em; 
+  margin: 10px 8px 2px;
+  position: relative;
+  z-index: 1;
+}
+
+.gpts { display: flex; flex-direction: column; gap: 2px; position: relative; z-index: 1; }
+.gpt-item { 
+  display: flex; 
+  align-items: center; 
+  gap: 10px; 
+  padding: 6px 8px; 
+  border-radius: 8px; 
+  color: #d6d9df;
+  transition: all 0.2s ease;
+}
+
+.gpt-item:hover {
+  background: var(--hover);
+  color: var(--text);
+}
+
+.model-item {
+  cursor: default;
+  opacity: 0.7;
+}
+
+.model-item:hover {
+  background: transparent;
+  color: #d6d9df;
+}
+
+/* Andrea AI button styling */
+#andreaAIButton {
+  cursor: pointer;
+  opacity: 1;
+  background: none;
+  border: none;
+  padding: 6px 8px;
+  width: 100%;
+  text-align: left;
+}
+
+#andreaAIButton:hover {
+  background: var(--hover);
+  color: var(--text);
+}
+
+.gpt-avatar { 
+  width: 20px; 
+  height: 20px; 
+  border-radius: 50%; 
+  background: var(--chip); 
+  border: 1px solid var(--divider); 
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.gpt-item:hover .gpt-avatar {
+  border-color: var(--accent-1);
+  box-shadow: 0 0 0 1px var(--accent-1);
+}
+
+.gpt-item-wrapper {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.gpt-item-wrapper:hover .delete-btn {
+  opacity: 1;
+}
+
+.gpt-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 120px; /* 15 karakter için yaklaşık genişlik */
+}
+
+.delete-btn {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  opacity: 0;
+  margin-left: 4px;
+  flex-shrink: 0;
+}
+
+.delete-btn:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border-color: #ef4444;
+}
+
+.gpt-avatar::after { 
+  content: ""; 
+  position: absolute; 
+  right: -1px; 
+  bottom: -1px; 
+  width: 7px; 
+  height: 7px; 
+  border-radius: 50%; 
+  background: var(--green); 
+  border: 2px solid var(--sidebar);
+}
+
+.spacer { flex: 1 }
+
+.user { 
+  display: flex; 
+  align-items: center; 
+  gap: 10px; 
+  color: #9fb0c8; 
+  padding: 10px 8px; 
+  border-top: 1px solid var(--divider);
+  position: relative;
+  z-index: 1;
+}
+
+.user .avatar { 
+  width: 26px; 
+  height: 26px; 
+  border-radius: 50%; 
+  background: var(--chip); 
+  border: 1px solid var(--divider);
+  transition: all 0.2s ease;
+}
+
+.user:hover .avatar {
+  border-color: var(--accent-1);
+  box-shadow: 0 0 0 1px var(--accent-1);
+}
+
+.logout-btn { 
+  width: 20px; 
+  height: 20px; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  color: var(--icon); 
+  transition: all 0.2s ease; 
+  border-radius: 4px; 
+  margin-left: auto
+}
+
+.logout-btn:hover { 
+  background: var(--hover); 
+  color: var(--accent-1);
+}
+
+/* ------------------ ANA ALAN ------------------ */
+.main { 
+  position: relative; 
+  background: var(--panel);
+  overflow: auto; /* scroll artık burada */
+  padding-bottom: var(--composer-h, 140px); /* composer yüksekliği kadar alt boşluk */
+  display: flex;
+  flex-direction: column;
+  height: 100vh; /* Tam yükseklik */
+}
+
+/* Tüm scroll konteynerleri aynı stil: body, .main, .messages, .composer-editor */
+body, .main, .messages, .composer-editor { 
+  scrollbar-width: thin;                    /* Firefox */
+  scrollbar-color: var(--accent-1) transparent;
+  scrollbar-gutter: stable both-edges;      /* Layout kaymasını azalt */
+}
+
+/* WebKit tabanlılar */
+body::-webkit-scrollbar,
+.main::-webkit-scrollbar,
+.messages::-webkit-scrollbar,
+.composer-editor::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+body::-webkit-scrollbar-track,
+.main::-webkit-scrollbar-track,
+.messages::-webkit-scrollbar-track,
+.composer-editor::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 6px;
+}
+
+body::-webkit-scrollbar-thumb,
+.main::-webkit-scrollbar-thumb,
+.messages::-webkit-scrollbar-thumb,
+.composer-editor::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--accent-1) 0%, var(--accent-2) 100%);
+  border-radius: 6px;
+  border: 2px solid var(--panel);
+  box-shadow: 0 2px 8px var(--shadow);
+}
+
+body::-webkit-scrollbar-thumb:hover,
+.main::-webkit-scrollbar-thumb:hover,
+.messages::-webkit-scrollbar-thumb:hover,
+.composer-editor::-webkit-scrollbar-thumb:hover {
+  box-shadow: 0 0 12px rgba(124, 58, 237, 0.35);
+}
+
+/* Neon tema için sadece gölge rengi farklı kalsın (opsiyonel) */
+.theme-neon body::-webkit-scrollbar-thumb:hover,
+.theme-neon .main::-webkit-scrollbar-thumb:hover,
+.theme-neon .messages::-webkit-scrollbar-thumb:hover,
+.theme-neon .composer-editor::-webkit-scrollbar-thumb:hover {
+  box-shadow: 0 0 12px rgba(255, 45, 149, 0.35);
+}
+
+/* .main::before BLOKUNU TAMAMEN KALDIRIN */
+.main::before { display: none; }
+
+/* ------------------ CHAT TITLE ------------------ */
+.chat-title {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  font-weight: 600;
+  font-size: 14px;
+  background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: 0.2px;
+  z-index: 1;
+}
+
+/* ------------------ MESSAGES AREA ------------------ */
+.messages {
+  flex: 1;
+  overflow: visible; /* kendi içinde scroll yok */
+  padding: 180px 60px calc(var(--composer-h, 140px) + 30px) 240px; /* Mesajlar, composer kadar nefes payı bıraksın */
+  position: relative;
+  z-index: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px; /* Consistent gap between messages */
+  scroll-behavior: smooth;
+  min-height: 0; /* Bu önemli - flex item'ın düzgün scroll yapması için */
+}
+
+/* Son mesaja ekstra 30px boşluk */
+.messages::after{
+  content:"";
+  display:block;
+  height:30px;   /* istediğin boşluk */
+}
+
+
+/* ------------------ MESSAGE STYLING ------------------ */
+/* Genel liste */
+.messages{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+
+/* Mesaj kartı */
+.msg{
+  --bubble:#0f172a;           /* assistant varsayılanı */
+  max-width:720px;
+  padding:12px 14px;
+  border-radius:16px;
+  background:var(--bubble);
+  display:grid;
+  grid-template-areas:
+    "header"
+    "content";
+  row-gap:8px;
+  position:relative;
+  animation: messageSlideIn 0.3s ease-out;
+  word-wrap: break-word;
+  line-height: 1.6;
+}
+
+@keyframes messageSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Rollere göre hizalama ve renk */
+.msg.assistant{ 
+  margin-right:auto; 
+  background: var(--chip);
+  border: 1px solid var(--divider);
+  color: var(--text);
+  box-shadow: 0 2px 8px var(--shadow);
+}
+
+.msg.user{
+  margin-left:auto;
+  --bubble:#1f2937;           /* user balon rengi */
+  background: var(--chip);
+  border: 1px solid var(--divider);
+  color: var(--text);
+  box-shadow: 0 2px 8px var(--shadow);
+  margin-right: 100px; /* Sağ taraftaki boşluk arttırıldı: 60px -> 100px */
+}
+
+/* Header her zaman üste */
+.msg-header{
+  grid-area:header;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-size:12px;
+  color:#9aa3b2;
+  position:static !important; /* Önceki absolute/flex kurallarını etkisiz kılar */
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Copy button in header */
+.copy-btn {
+  background: transparent;
+  border: none;
+  color: #9aa3b2;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  margin-left: auto;
+  opacity: 0;
+}
+
+.msg:hover .copy-btn {
+  opacity: 1;
+}
+
+.copy-btn:hover {
+  background: var(--hover);
+  color: var(--accent-1);
+}
+
+/* Avatar */
+.msg-avatar{
+  width:22px; height:22px;
+  border-radius:50%;
+  display:grid; place-items:center;
+  background:#334155; color:#e5e7eb;
+  font-weight:700; font-size:12px;
+}
+
+/* İçerik */
+.msg-content{
+  grid-area:content;
+  color:#e5e7eb;
+  position:static !important;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+
+.msg-timestamp {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 4px;
+  opacity: 0.7;
+}
+
+/* ------------------ TYPING INDICATOR ------------------ */
+.typing-indicator {
+  align-self: flex-start;
+  background: var(--chip);
+  border: 1px solid var(--divider);
+  border-radius: 16px;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: min(900px, 85%);
+  animation: messageSlideIn 0.3s ease-out;
+}
+
+.typing-dots {
+  display: flex;
+  gap: 4px;
+}
+
+.typing-dot {
+  width: 6px;
+  height: 6px;
+  background: var(--accent-1);
+  border-radius: 50%;
+  animation: typingDot 1.4s infinite ease-in-out;
+}
+
+.typing-dot:nth-child(1) { animation-delay: -0.32s; }
+.typing-dot:nth-child(2) { animation-delay: -0.16s; }
+.typing-dot:nth-child(3) { animation-delay: 0s; }
+
+@keyframes typingDot {
+  0%, 80%, 100% {
+    transform: scale(0.8);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* ------------------ COMPOSER ------------------ */
+.composer {
+  position: fixed;
+  bottom: 16px; /* ekrandan 16px yukarıda dursun */
+  left: 260px; /* sidebar genişliği kadar offset */
+  right: 0;
+  z-index: 20;
+  background: none !important;
+  border-top: none;
+  padding: 0; /* dış padding'e gerek yok, merkezlemeyi form yapıyor */
+  display: flex;
+  justify-content: center;
+  pointer-events: none; /* alttakileri kilitlemesin */
+  backdrop-filter: none;
+}
+
+/* Son mesaja giderken composer'a çarpmasın diye */
+.msg { scroll-margin-bottom: 96px; } /* JS gerçek yüksekliğiyle güncelleyecek */
+
+.composer * { pointer-events: auto; } /* butonlar/editör tıklanabilir kalsın */
+
+.composer form {
+  width: min(900px, 85%);
+  margin: 0 auto;
+  display: flex;
+  gap: 0; /* Gap'i kaldır çünkü send button içeride */
+  align-items: center;
+  position: relative;
+}
+
+/* ChatGPT benzeri composer grid yapısı */
+.composer-inner {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  grid-template-areas:
+    "leading primary trailing";
+  align-items: center;
+  gap: 8px;
+  min-height: 56px;
+  background-color: rgba(15, 17, 20, 0.8); /* yarı saydam */
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--input-bd);
+  border-radius: 24px;
+  padding: 10px;
+  transition: all 0.2s ease;
+  width: 100%;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.composer-inner:focus-within {
+  border-color: var(--accent-1);
+  box-shadow: 0 0 0 1px var(--accent-1); /* sade */
+}
+
+.composer-leading   { grid-area: leading; display: flex; align-items: center; }
+.composer-trailing  { grid-area: trailing; display: flex; align-items: center; gap: 6px; }
+.composer-primary   { grid-area: primary; display: flex; min-height: 56px; }
+
+/* Fallback textarea (gizli) – tarayıcı uyumluluğu için yer tutucu */
+.composer-fallback { display: none; }
+
+/* Asıl contenteditable alan */
+.composer-editor {
+  outline: none;
+  border: 0;
+  background: transparent;
+  flex: 1 1 auto;
+
+  /* ÖNEMLİ: sabit height kaldır, otomatik büyüme + üst sınır */
+  min-height: 48px;
+  max-height: 35svh;      /* ChatGPT benzeri: ekranın %35'i kadar */
+  overflow: auto;         /* içerik artınca scroll aç */
+  padding: 6px 8px;
+
+  /* Yuvarlatılmış köşeler */
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+
+  /* caret ve satır kırılmalar */
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+  line-height: 1.45;
+
+  /* Scrollbar inceltme (isteğe bağlı) */
+  scrollbar-width: thin;
+  scrollbar-color: var(--divider) transparent;
+}
+
+/* Prompt editor focus state */
+.composer-editor:focus {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: var(--accent-1);
+  box-shadow: 0 0 0 1px var(--accent-1), 0 2px 8px rgba(124, 58, 237, 0.1);
+}
+
+.theme-neon .composer-editor:focus {
+  box-shadow: 0 0 0 1px var(--accent-1), 0 2px 8px rgba(255, 45, 149, 0.1);
+}
+
+
+/* ProseMirror içerik varsayılanları */
+.ProseMirror p { 
+  margin: 0; 
+  padding: 2px 0;
+}
+
+.ProseMirror p + p { 
+  margin-top: .4rem; 
+}
+
+.ProseMirror br[data-trailing] { 
+  display: inline-block; 
+}
+
+/* Prompt editor placeholder styling */
+.composer-editor:empty::before {
+  content: "Mesajınızı yazın...";
+  color: var(--muted);
+  font-style: italic;
+  pointer-events: none;
+  position: absolute;
+}
+
+.composer-editor:focus:empty::before {
+  color: var(--accent-1);
+}
+
+/* Prompt editor content styling */
+.composer-editor:not(:empty) {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: var(--divider);
+}
+
+.composer-editor:not(:empty):focus {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--accent-1);
+}
+
+.composer-btn, .composer-submit-btn {
+  all: unset;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px; height: 36px;
+  border-radius: 999px;
+  cursor: pointer;
+  user-select: none;
+  background: rgba(0,0,0,.06);
+  color: var(--icon);
+  transition: all 0.2s ease;
+}
+
+@media (prefers-color-scheme: dark) {
+  .composer-btn, .composer-submit-btn { background: rgba(255,255,255,.08); }
+}
+
+.composer-submit-btn {
+  background: var(--accent-1);
+  color: white;
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.3);
+}
+
+.theme-neon .composer-submit-btn {
+  background: var(--accent-1);
+  box-shadow: 0 2px 8px rgba(255, 45, 149, 0.3);
+}
+
+.composer-submit-btn:hover,
+.composer-btn:hover { 
+  filter: brightness(1.05);
+  transform: scale(1.05);
+}
+
+.composer-submit-btn:hover {
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.4);
+}
+
+.theme-neon .composer-submit-btn:hover {
+  box-shadow: 0 4px 12px rgba(255, 45, 149, 0.4);
+}
+
+.composer-submit-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Eski stilleri kaldır */
+.input-container {
+  display: none;
+}
+
+.send-btn {
+  display: none;
+}
+
+/* Odak görünürlüğü genel */
+:focus-visible { 
+  outline: 2px solid var(--ring); 
+  outline-offset: 2px 
+}
+
+/* ------------------ MOBILE RESPONSIVENESS ------------------ */
+@media (max-width: 1024px) {
+  .app { grid-template-columns: 240px 1fr }
+  .messages { padding: 150px 16px calc(var(--composer-h, 140px) + 30px) 16px; } /* Tablet */
+  .composer { padding: 12px 16px; }
+  .header { padding: 12px 16px; }
+}
+
+@media (max-width: 768px) {
+  .app { 
+    grid-template-columns: 1fr;
+    position: relative;
+  }
+  
+  .sidebar { 
+    position: fixed; 
+    left: -280px; 
+    top: 0; 
+    height: 100%; 
+    width: 280px;
+    z-index: 1000;
+    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 2px 0 10px var(--shadow-lg);
+  }
+  
+  .sidebar.open { 
+    left: 0; 
+  }
+  
+  .main { 
+    margin-left: 0;
+    width: 100%;
+    height: 100vh;
+  }
+  
+  .chat-title {
+    top: 16px;
+    left: 16px;
+    font-size: 14px;
+  }
+  
+  .messages {
+    flex: 1;
+    overflow: visible;
+    padding: 150px 16px calc(var(--composer-h, 120px) + 30px) 16px; /* Mobil */
+    position: relative;
+    z-index: 0;
+    gap: 12px; /* Consistent gap between messages */
+  }
+  
+  .msg {
+    max-width: 95%;
+    padding: 12px 16px;
+    font-size: 13px;
+  }
+  
+  .msg.user {
+    margin-right: 60px; /* Mobile'da sağ taraftaki boşluk arttırıldı: 36px -> 60px */
+  }
+  
+  .msg-header {
+    font-size: 11px;
+    margin-bottom: 6px;
+  }
+  
+  .msg-avatar {
+    width: 18px;
+    height: 18px;
+    font-size: 9px;
+  }
+  
+  .composer {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 12px;
+    z-index: 20;
+    pointer-events: none;
+    border-top: none;
+    padding: 0;
+    justify-content: center;
+  }
+  
+  .composer form {
+    width: min(900px, 95%);
+  }
+  
+  .composer-inner {
+    min-height: 48px;
+    padding: 8px;
+  }
+  
+  .composer-editor {
+    min-height: 40px;
+    font-size: 13px;
+    padding: 4px 6px;
+  }
+  
+  .composer-btn, .composer-submit-btn {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .character-count {
+    font-size: 10px;
+    bottom: 2px;
+    right: 6px;
+  }
+  
+}
+
+@media (max-width: 480px) {
+  .messages {
+    flex: 1;
+    overflow: visible;
+    padding: 135px 12px calc(var(--composer-h, 110px) + 30px) 12px; /* Daha küçük mobil */
+    position: relative;
+    z-index: 0;
+    gap: 12px; /* Consistent gap between messages */
+  }
+  
+  .msg {
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+  
+  .msg.user {
+    margin-right: 40px; /* Küçük ekranlarda sağ taraftaki boşluk arttırıldı: 24px -> 40px */
+  }
+  
+  .composer {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 8px;
+    z-index: 20;
+    pointer-events: none;
+    border-top: none;
+    padding: 0;
+    justify-content: center;
+  }
+  
+  .composer form {
+    width: min(900px, 98%);
+  }
+  
+  .composer-inner {
+    min-height: 44px;
+    padding: 6px;
+  }
+  
+  .composer-editor {
+    min-height: 36px;
+    font-size: 13px;
+    padding: 3px 5px;
+  }
+  
+  .composer-btn, .composer-submit-btn {
+    width: 28px;
+    height: 28px;
+  }
+  
+  .chat-title {
+    top: 12px;
+    left: 12px;
+    font-size: 13px;
+  }
+}
+
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar" aria-label="Yan Menü">
+    <div class="top-strip">
+      <button class="theme-toggle" id="themeToggle" aria-label="Tema değiştir" title="Tema değiştir">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="5"></circle>
+          <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path>
+        </svg>
+      </button>
+      <div class="brand">Andrea <small>v1</small></div>
+    </div>
+
+    <a class="new-project" href="#" aria-label="Yeni sohbet başlat">
+      <span class="icon" aria-hidden="true">
+        <!-- artı -->
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>
+      </span>
+      Yeni sohbet
+    </a>
+
+    <nav class="menu" aria-label="Genel">
+      <div class="search-item">
+        <span class="icon" aria-hidden="true">
+          <!-- büyüteç -->
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="7"></circle><path d="M21 21l-3.5-3.5"></path>
+          </svg>
+        </span>
+        <input type="text" placeholder="Sohbetlerde ara..." class="search-input" aria-label="Sohbetlerde ara">
+      </div>
+    </nav>
+
+    <div class="section-label">Modeller</div>
+    <div class="gpts">
+      <button class="gpt-item" id="mondayBtn" type="button">
+        <span class="gpt-avatar" aria-hidden="true"></span>
+        Monday
+      </button>
+    </div>
+
+    <div class="section-label">Sohbetlerim</div>
+    <div class="gpts" id="chatList">
+      {% for c in chats %}
+        <div class="gpt-item-wrapper">
+          <a class="gpt-item" href="{% url 'chat:detail' c.id %}">
+            <span class="gpt-avatar"></span>
+            <span class="gpt-title">{{ c.title }}</span>
+          </a>
+          <button class="delete-btn" data-chat-id="{{ c.id }}" title="Sohbeti sil">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M10 11v6M14 11v6"></path>
+            </svg>
+          </button>
+        </div>
+      {% empty %}
+        <div class="gpt-item" style="opacity:.7">Henüz sohbet yok</div>
+      {% endfor %}
+    </div>
+
+    <div class="spacer"></div>
+
+    <div class="user" role="contentinfo">
+      <div class="avatar" aria-hidden="true"></div>
+      <div>
+        <div style="font-weight:600;color:#cfd3da;">{{ user.username|default:"Misafir Kullanıcı" }}</div>
+      </div>
+      <a href="{% url 'logout' %}" class="logout-btn" title="Çıkış yap">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+          <polyline points="16,17 21,12 16,7"></polyline>
+          <line x1="21" y1="12" x2="9" y2="12"></line>
+        </svg>
+      </a>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="chat-title">{{ chat.title }}</div>
+
+    <div class="messages" id="messages">
+      {% for m in messages %}
+        <div class="msg {{ m.role }}">
+          <div class="msg-header">
+            <div class="msg-avatar">
+              {% if m.role == 'user' %}U{% else %}A{% endif %}
+            </div>
+            <span>{% if m.role == 'user' %}Sen{% else %}Andrea AI{% endif %}</span>
+            <span class="msg-timestamp">{{ m.created_at|date:"H:i" }}</span>
+            <button class="copy-btn" title="Kopyala" onclick="copyMessage(this)">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+              </svg>
+            </button>
+          </div>
+          <div class="msg-content">{{ m.content|linebreaksbr }}</div>
+        </div>
+      {% endfor %}
+    </div>
+
+    <div class="composer">
+      <form id="composerForm" action="{% url 'chat:send' chat.id %}" method="post">
+        <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+        
+        <!-- Composer Wrapper -->
+        <div class="composer-inner">
+          <!-- Leading area (ikonlar vs.) -->
+          <div class="composer-leading">
+            <button type="button" class="composer-btn" aria-label="Ekle">＋</button>
+          </div>
+
+          <!-- Primary editable area -->
+          <div class="composer-primary">
+            <textarea class="composer-fallback" name="prompt-textarea" aria-hidden="true" tabindex="-1"></textarea>
+
+            <div
+              id="prompt-editor"
+              class="ProseMirror composer-editor"
+              contenteditable="true"
+              translate="no"
+              data-virtualkeyboard="true"
+              role="textbox"
+              aria-multiline="true"
+              spellcheck="true"
+            ><p><br></p></div>
+
+            <input type="hidden" id="msgInput" name="message" required value="">
+          </div>
+
+          <!-- Trailing area (mic/gönder) -->
+          <div class="composer-trailing">
+            <button type="button" id="composer-mic" class="composer-btn" aria-label="Dikte">🎤</button>
+            <button type="button" id="composer-send" class="composer-submit-btn" aria-label="Gönder">⮝</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </main>
+</div>
+
+<script>
+// Global variables
+let isTyping = false;
+let typingTimeout = null;
+
+// Utility functions
+function formatTime(date) {
+  return new Date(date).toLocaleTimeString('tr-TR', { 
+    hour: '2-digit', 
+    minute: '2-digit' 
+  });
+}
+
+function scrollToBottom() {
+  const main = document.querySelector('.main');
+  main.scrollTop = main.scrollHeight;
+}
+
+function showTypingIndicator() {
+  if (isTyping) return;
+  
+  isTyping = true;
+  const messages = document.getElementById('messages');
+  const typingDiv = document.createElement('div');
+  typingDiv.className = 'typing-indicator';
+  typingDiv.id = 'typingIndicator';
+  typingDiv.innerHTML = `
+    <div class="msg-avatar">A</div>
+    <span>Andrea AI yazıyor</span>
+    <div class="typing-dots">
+      <div class="typing-dot"></div>
+      <div class="typing-dot"></div>
+      <div class="typing-dot"></div>
+    </div>
+  `;
+  messages.appendChild(typingDiv);
+  scrollToBottom();
+}
+
+function hideTypingIndicator() {
+  const typingIndicator = document.getElementById('typingIndicator');
+  if (typingIndicator) {
+    typingIndicator.remove();
+  }
+  isTyping = false;
+}
+
+function createMessageElement(role, content, timestamp = null) {
+  const msgDiv = document.createElement('div');
+  msgDiv.className = `msg ${role}`;
+  
+  const time = timestamp ? formatTime(timestamp) : formatTime(new Date());
+  
+  msgDiv.innerHTML = `
+    <div class="msg-header">
+      <div class="msg-avatar">${role === 'user' ? 'U' : 'A'}</div>
+      <span>${role === 'user' ? 'Sen' : 'Andrea AI'}</span>
+      <span class="msg-timestamp">${time}</span>
+      <button class="copy-btn" title="Kopyala" onclick="copyMessage(this)">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+        </svg>
+      </button>
+    </div>
+    <div class="msg-content">${content.replace(/\n/g, '<br>')}</div>
+  `;
+  
+  return msgDiv;
+}
+
+// Message action functions
+function copyMessage(button) {
+  const messageContent = button.closest('.msg').querySelector('.msg-content').textContent;
+  navigator.clipboard.writeText(messageContent).then(() => {
+    // Show visual feedback animation
+    showCopyFeedback(button.closest('.msg'));
+  }).catch(() => {
+    // Fallback for older browsers
+    const textArea = document.createElement('textarea');
+    textArea.value = messageContent;
+    document.body.appendChild(textArea);
+    textArea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textArea);
+    showCopyFeedback(button.closest('.msg'));
+  });
+}
+
+function showCopyFeedback(messageElement) {
+  // Find the copy button
+  const copyButton = messageElement.querySelector('.copy-btn');
+  if (!copyButton) return;
+  
+  // Store original icon
+  const originalIcon = copyButton.innerHTML;
+  
+  // Change to checkmark icon
+  copyButton.innerHTML = `
+    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M20 6L9 17l-5-5"></path>
+    </svg>
+  `;
+  
+  // Change button color to green
+  copyButton.style.color = '#22c55e';
+  
+  // Restore original icon after 2 seconds
+  setTimeout(() => {
+    copyButton.innerHTML = originalIcon;
+    copyButton.style.color = '';
+  }, 2000);
+}
+
+function regenerateMessage(button) {
+  // This would regenerate the last assistant message
+  alert('Yeniden oluşturma özelliği yakında eklenecek!');
+}
+
+// Auto-resize contenteditable
+function autoResizeContentEditable(element) {
+  element.style.height = 'auto';
+  const newHeight = Math.min(element.scrollHeight, 100);
+  element.style.height = newHeight + 'px';
+  
+  // Eğer max height'e ulaştıysa scroll yapabilir hale getir
+  if (element.scrollHeight > 100) {
+    element.style.overflowY = 'auto';
+  } else {
+    element.style.overflowY = 'hidden';
+  }
+}
+
+// Contenteditable'den metin al
+function getContentEditableText(element) {
+  return element.textContent || element.innerText || '';
+}
+
+// Character count update - kaldırıldı
+
+// ChatGPT benzeri composer JavaScript
+(function () {
+  const editor = document.getElementById('prompt-editor');
+  const hidden = document.getElementById('msgInput');
+  const sendBtn = document.getElementById('composer-send');
+  const form = document.getElementById('composerForm');
+
+  // --- Ayarlar ---
+  const DEBOUNCE_MS = 120;                   // input debouncing
+  const HARD_CHAR_LIMIT = 20000;             // yapıştırma tavanı (20k)
+  let debTimer = null;
+
+  // --- Hafif metin çıkarıcı (anlık görüntü) ---
+  // Yazarken pahalı DOM klonlama yapmıyoruz; sadece textContent alıyoruz.
+  function lightweightTextSnapshot() {
+    // Zero-width temizle, sonda aşırı boşlukları at.
+    return (editor.textContent || "")
+      .replace(/\u200B/g, '')
+      .trimEnd();
+  }
+
+  // --- Ağır dönüştürücü (yalnızca gönderirken) ---
+  // <br> ve <p>'leri gerçek satır sonuna çevir.
+  function heavyHtmlToPlain() {
+    const tmp = editor.cloneNode(true);
+    tmp.querySelectorAll('br').forEach(br => br.replaceWith('\n'));
+    tmp.querySelectorAll('p').forEach((p, idx) => {
+      if (idx > 0) p.prepend(document.createTextNode('\n'));
+    });
+    return (tmp.textContent || "").replace(/\u200B/g,'').trimEnd();
+  }
+
+  function scheduleHiddenUpdate() {
+    clearTimeout(debTimer);
+    debTimer = setTimeout(() => {
+      hidden.value = lightweightTextSnapshot();   // hızlı güncelleme
+    }, DEBOUNCE_MS);
+  }
+
+  function isEmptyEditor() {
+    const html = editor.innerHTML.replace(/\s+/g,'').toLowerCase();
+    return html === '<p><br></p>' || html === '<br>' || html === '';
+  }
+
+  function normalizeEmpty() {
+    if (isEmptyEditor()) editor.innerHTML = '<p><br></p>';
+  }
+
+  function insertHardBreak() {
+    const sel = window.getSelection();
+    if (!sel || !sel.rangeCount) return;
+    const range = sel.getRangeAt(0);
+    range.deleteContents();
+    const br = document.createElement('br');
+    const zws = document.createTextNode('\u200B');
+    range.insertNode(br);
+    br.after(zws);
+    range.setStartAfter(zws);
+    range.setEndAfter(zws);
+    sel.removeAllRanges();
+    sel.addRange(range);
+  }
+
+  function scrollCaretIntoView() {
+    const sel = window.getSelection();
+    if (!sel || !sel.anchorNode) return;
+    let node = sel.anchorNode.nodeType === 3 ? sel.anchorNode.parentElement : sel.anchorNode;
+    if (!editor.contains(node)) return;
+    // Sadece editör içinde kaydır
+    const r = sel.getRangeAt(0).getBoundingClientRect();
+    const host = editor.getBoundingClientRect();
+    if (r.bottom > host.bottom - 8) editor.scrollTop += (r.bottom - host.bottom) + 8;
+    else if (r.top < host.top + 8) editor.scrollTop -= (host.top - r.top) + 8;
+  }
+
+  // --- Olaylar ---
+  editor.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      if (e.shiftKey) {
+        e.preventDefault();
+        insertHardBreak();
+        // ağır iş yok; sadece caret görünür kalsın
+        requestAnimationFrame(scrollCaretIntoView);
+        scheduleHiddenUpdate();
+      } else {
+        e.preventDefault();
+        // GÖNDERME: ağır dönüşümü burada yap
+        const plain = heavyHtmlToPlain();
+        hidden.value = plain;
+        if (!plain.trim()) return;
+        form.dispatchEvent(new Event('submit'));
+      }
+    }
+  });
+
+  // Yazarken: sadece hafif snapshot ve küçük işler
+  editor.addEventListener('input', () => {
+    normalizeEmpty();
+    scheduleHiddenUpdate();
+    // caret görünürlüğü
+    requestAnimationFrame(scrollCaretIntoView);
+  });
+
+  // Büyük yapıştırmaları uysalca ele al
+  editor.addEventListener('paste', (e) => {
+    e.preventDefault();
+    const pasteText = (e.clipboardData || window.clipboardData).getData('text') || '';
+    // Tavan uygula (çok devasa metinlere karşı)
+    const clipped = pasteText.length > HARD_CHAR_LIMIT
+      ? pasteText.slice(0, HARD_CHAR_LIMIT)
+      : pasteText;
+
+    // Range ile direkt düz metin ekle (execCommand yok)
+    const sel = window.getSelection();
+    if (sel && sel.rangeCount) {
+      const range = sel.getRangeAt(0);
+      range.deleteContents();
+      range.insertNode(document.createTextNode(clipped));
+      // Caret'i sona al
+      range.collapse(false);
+      sel.removeAllRanges();
+      sel.addRange(range);
+    } else {
+      editor.appendChild(document.createTextNode(clipped));
+    }
+
+    // Bir kaç microtask sonra normalize + hafif snapshot
+    queueMicrotask(() => {
+      normalizeEmpty();
+      scheduleHiddenUpdate();
+      requestAnimationFrame(scrollCaretIntoView);
+    });
+  });
+
+  // Dışarı tıklayınca basit normalize
+  editor.addEventListener('blur', () => {
+    normalizeEmpty();
+    // blur'de ağır iş yok
+  });
+
+  // Gönder butonu: ağır dönüşüm sadece burada
+  sendBtn?.addEventListener('click', () => {
+    const plain = heavyHtmlToPlain();
+    hidden.value = plain;
+    if (!plain.trim()) return;
+    form.dispatchEvent(new Event('submit'));
+  });
+
+  // İlk kurulum
+  normalizeEmpty();
+  hidden.value = '';
+})();
+
+// ---- Chat durum kontrolü (exponential backoff + tek init) ----
+function checkInitialResponse() {
+  const messages = document.getElementById('messages');
+  const pollUrlEl = document.querySelector('meta[name="chat-check-url"]');
+  if (!pollUrlEl) return;
+  if (window.__chatPollingStarted) return;
+  window.__chatPollingStarted = true;
+
+  // Yardımcılar
+  function showInlineError(msg) {
+    hideTypingIndicator();
+    const box = document.createElement('div');
+    box.setAttribute('role','alert');
+    box.style.cssText = 'margin:12px 240px 0 60px;padding:10px 12px;border:1px solid #ef4444;border-radius:10px;background:rgba(239,68,68,.08);color:#fca5a5;max-width:min(900px,85%)';
+    box.textContent = msg;
+    messages.appendChild(box);
+    scrollToBottom();
+  }
+
+  // Zaten assistant mesajı varsa hiç başlamayalım
+  if (messages.querySelector('.msg.assistant')) return;
+
+  showTypingIndicator();
+
+  const checkUrl = pollUrlEl.content;
+  let attempt = 0;
+  let stopped = false;
+
+  async function poll() {
+    if (stopped) return;
+    const delay = Math.min(5000, 800 + attempt * 800);
+    attempt++;
+    try {
+      const res = await fetch(checkUrl, { headers: { 'Accept': 'application/json' } });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      if (data.ready && data.message) {
+        stopped = true;
+        hideTypingIndicator();
+        const assistantMsg = createMessageElement('assistant', data.message.content, data.message.created_at);
+        messages.appendChild(assistantMsg);
+        scrollToBottom();
+        return;
+      }
+      // pending
+      setTimeout(poll, delay);
+    } catch (e) {
+      stopped = true;
+      showInlineError('Bağlantı hatası. Lütfen tekrar deneyin.');
+    }
+  }
+
+  poll();
+}
+
+// Main initialization
+document.addEventListener('DOMContentLoaded', () => {
+  const html = document.documentElement;
+  const form = document.getElementById('composerForm');
+  const messages = document.getElementById('messages');
+  
+  // Theme toggle
+  html.className = `theme-${localStorage.getItem('theme') || 'aurora'}`;
+  const themeToggle = document.getElementById('themeToggle');
+  themeToggle?.addEventListener('click', () => {
+    const cur = html.className.includes('aurora') ? 'aurora' : 'neon';
+    const next = cur === 'aurora' ? 'neon' : 'aurora';
+    html.className = `theme-${next}`;
+    localStorage.setItem('theme', next);
+    
+    const icon = themeToggle.querySelector('svg');
+    if (next === 'aurora') {
+      icon.innerHTML = '<circle cx="12" cy="12" r="5"></circle><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path>';
+    } else {
+      icon.innerHTML = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>';
+    }
+  });
+
+  // Toast notification function
+  function showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    toast.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: ${type === 'warning' ? 'rgba(255, 193, 7, 0.9)' : 'rgba(33, 37, 41, 0.9)'};
+      color: ${type === 'warning' ? '#000' : '#fff'};
+      padding: 12px 16px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      z-index: 1000;
+      font-size: 14px;
+      max-width: 300px;
+      word-wrap: break-word;
+      animation: slideIn 0.3s ease-out;
+    `;
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    
+    // Auto remove after 4 seconds
+    setTimeout(() => {
+      toast.style.animation = 'slideOut 0.3s ease-in';
+      setTimeout(() => toast.remove(), 300);
+    }, 4000);
+  }
+
+  // Add CSS for toast animations
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+    @keyframes slideOut {
+      from { transform: translateX(0); opacity: 1; }
+      to { transform: translateX(100%); opacity: 0; }
+    }
+  `;
+  document.head.appendChild(style);
+
+  // Form submission
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const text = document.getElementById('msgInput').value.trim();
+    if (!text) return;
+    
+    // Disable form
+    const sendBtn = document.getElementById('composer-send');
+    const editor = document.getElementById('prompt-editor');
+    sendBtn.disabled = true;
+    editor.contentEditable = 'false';
+    
+    // Add user message
+    const userMsg = createMessageElement('user', text);
+    messages.appendChild(userMsg);
+    scrollToBottom();
+    
+    // Clear input
+    editor.innerHTML = '<p><br></p>';
+    document.getElementById('msgInput').value = '';
+    
+    // Show typing indicator
+    showTypingIndicator();
+    
+    // Send request
+    const formData = new FormData(form);
+    formData.set('message', text);
+    
+    try {
+      const res = await fetch(form.action, {
+        method: 'POST',
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        body: formData
+      });
+      
+      hideTypingIndicator();
+      
+      if (!res.ok) {
+        throw new Error('Network error');
+      }
+      
+      const data = await res.json();
+      if (data.ok && data.messages) {
+        const last = data.messages[data.messages.length - 1];
+        const assistantMsg = createMessageElement('assistant', last.content, last.created_at);
+        messages.appendChild(assistantMsg);
+        scrollToBottom();
+        
+        // Show fallback notification if used
+        if (data.used_fallback) {
+          showToast('Seçilen model aktif değil, varsayılan kullanıldı.', 'warning');
+        }
+      } else {
+        throw new Error('Invalid response');
+      }
+    } catch (error) {
+      hideTypingIndicator();
+      const errorMsg = createMessageElement('assistant', 'Üzgünüm, bir hata oluştu. Lütfen tekrar deneyin.');
+      messages.appendChild(errorMsg);
+      scrollToBottom();
+    } finally {
+      // Re-enable form
+      sendBtn.disabled = false;
+      editor.contentEditable = 'true';
+      editor.focus();
+    }
+  });
+
+  // Yeni sohbet: home ile aynı davranış
+  const newTaskBtn = document.querySelector('.new-project');
+  if (newTaskBtn) {
+    newTaskBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      // detay sayfasındayken yeni sohbet için ana sayfaya dön
+      location.href = '{% url "home" %}';
+    });
+  }
+
+  // Monday seçimi: sadece odak – persona seçimi detaya değil, start aşamasına ait
+  const mondayBtn = document.getElementById('mondayBtn');
+  if (mondayBtn) {
+    mondayBtn.addEventListener('click', function() {
+      // detayda prompt yok; kullanıcı yeni sohbet açarak başlasın
+      location.href = '{% url "home" %}';
+    });
+  }
+
+  // Chat deletion
+  const deleteButtons = document.querySelectorAll('.delete-btn');
+  deleteButtons.forEach(btn => {
+    btn.addEventListener('click', async function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      const chatId = this.getAttribute('data-chat-id');
+      const chatTitle = this.closest('.gpt-item-wrapper').querySelector('.gpt-title').textContent;
+      
+      if (confirm(`"${chatTitle}" sohbetini silmek istediğinizden emin misiniz?`)) {
+        try {
+          const response = await fetch(`/chat/${chatId}/delete/`, {
+            method: 'POST',
+            headers: {
+              'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+              'X-Requested-With': 'XMLHttpRequest',
+              'Content-Type': 'application/x-www-form-urlencoded',
+            }
+          });
+          
+          if (response.ok) {
+            const data = await response.json();
+            if (data.ok) {
+              if (parseInt(chatId) === {{ chat.id }}) {
+                window.location.href = '{% url "home" %}';
+                return;
+              }
+              
+              this.closest('.gpt-item-wrapper').remove();
+              
+              const gptsContainer = this.closest('.gpts') || document.getElementById('chatList');
+              const remainingChats = gptsContainer.querySelectorAll('.gpt-item-wrapper');
+              if (remainingChats.length === 0) {
+                gptsContainer.innerHTML = '<div class="gpt-item" style="opacity:.7">Henüz sohbet yok</div>';
+              }
+            } else {
+              alert('Sohbet silinirken bir hata oluştu.');
+            }
+          } else {
+            alert('Sohbet silinirken bir hata oluştu.');
+          }
+        } catch (error) {
+          console.error('Silme hatası:', error);
+          alert('Sohbet silinirken bir hata oluştu.');
+        }
+      }
+    });
+  });
+
+
+  // Check for initial LLM response if this is a new chat
+  checkInitialResponse();
+
+  // Initial setup
+  const _editor = document.getElementById('prompt-editor');
+  _editor && _editor.focus();
+  scrollToBottom();
+
+  // Font'lar yüklenince composer yüksekliğini tekrar ölçmek
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(() => {
+      const ev = new Event('resize');
+      window.dispatchEvent(ev);
+    });
+  }
+});
+
+// Basit dinamik composer yüksekliği (isteğe bağlı)
+(function () {
+  const root     = document.documentElement;
+  const composer = document.querySelector('.composer');
+  const inner    = document.querySelector('.composer-inner');
+  const editor   = document.getElementById('prompt-editor');
+
+  let rafId = null;
+  function setComposerHeight() {
+    if (rafId) return;
+    rafId = requestAnimationFrame(() => {
+      const h = composer?.offsetHeight || inner?.offsetHeight || 120;
+      root.style.setProperty('--composer-h', (h + 16) + 'px');
+      rafId = null;
+    });
+  }
+
+  setComposerHeight();
+  window.addEventListener('resize', setComposerHeight, { passive: true });
+
+  if (window.ResizeObserver) {
+    const ro = new ResizeObserver(setComposerHeight);
+    inner && ro.observe(inner);
+    editor && ro.observe(editor);
+  }
+
+  // Font yüklenince tekrar ölç (layout sabitlensin)
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(() => {
+      setComposerHeight();
+    });
+  }
+})();
+
+// Composer yüksekliğine göre mesaj alanına alt boşluk ver
+(function () {
+  const comp = document.querySelector('.composer');
+  const lastMsg = document.querySelector('.msg:last-of-type');
+  if (!comp || !lastMsg) return;
+
+  // Mesajların bulunduğu scroller: son mesajın ebeveyni genelde bu olur
+  const scroller = lastMsg.parentElement;
+
+  function applySpace() {
+    const h = Math.ceil(comp.getBoundingClientRect().height || 0);
+    // Composer kadar alt boşluk ver
+    scroller.style.paddingBottom = (h + 12) + 'px';     // +12 küçük nefes payı
+    // Anchor/auto-scroll için güvenlik payı
+    document.querySelectorAll('.msg').forEach(el => {
+      el.style.scrollMarginBottom = (h + 12) + 'px';
+    });
+    // Eğer kullanıcı en alttaysa yeni yüksekliğe göre dibe in
+    if (isNearBottom(scroller)) scroller.scrollTop = scroller.scrollHeight;
+  }
+
+  function isNearBottom(el, tol = 64) {
+    return el.scrollHeight - el.scrollTop - el.clientHeight < tol;
+  }
+
+  // İlk kurulum + pencere değişimlerinde güncelle
+  applySpace();
+  window.addEventListener('resize', applySpace);
+
+  // Composer yükseklik değişimini yakala (textarea büyümesi vs.)
+  new ResizeObserver(applySpace).observe(comp);
+
+  // Yeni mesaj eklendikçe boşluğu koru ve dibe yapış
+  new MutationObserver(() => {
+    applySpace();
+    if (isNearBottom(scroller)) scroller.scrollTop = scroller.scrollHeight;
+  }).observe(scroller, { childList: true });
+
+})();
+</script>
+</body>
+</html>
