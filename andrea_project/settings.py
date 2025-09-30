@@ -160,5 +160,6 @@ OPENROUTER_MODEL = os.getenv('OPENROUTER_MODEL', 'openai/gpt-5')
 if not DEBUG:
     CSRF_TRUSTED_ORIGINS = [
         'https://*.railway.app',
+        'https://*.up.railway.app',
     ]
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
