@@ -36,19 +36,23 @@ SECRET_KEY = (
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
 
-# Allow overriding via DJANGO_ALLOWED_HOSTS first, then ALLOWED_HOSTS; provide safe defaults
-ALLOWED_HOSTS = (
+# --- helpers: güvenli split ---
+def _split_env_list(value: str) -> list[str]:
+    return [x.strip() for x in value.split(',') if x.strip()]
+
+# --- ALLOWED_HOSTS ---
+_raw_hosts = (
     os.getenv('DJANGO_ALLOWED_HOSTS')
     or os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1,.up.railway.app,.railway.app,andrea-production.up.railway.app')
-).split(',')
+)
+ALLOWED_HOSTS = _split_env_list(_raw_hosts)
 
-# CSRF trusted origins (env-driven with safe defaults)
-CSRF_TRUSTED_ORIGINS = (
-    os.getenv(
-        'DJANGO_CSRF_TRUSTED_ORIGINS',
-        os.getenv('CSRF_TRUSTED_ORIGINS', 'https://*.up.railway.app,https://*.railway.app,https://andrea-production.up.railway.app')
-    )
-).split(',')
+# --- CSRF_TRUSTED_ORIGINS ---
+_raw_csrf = (
+    os.getenv('DJANGO_CSRF_TRUSTED_ORIGINS')
+    or os.getenv('CSRF_TRUSTED_ORIGINS', 'https://*.up.railway.app,https://*.railway.app,https://andrea-production.up.railway.app')
+)
+CSRF_TRUSTED_ORIGINS = _split_env_list(_raw_csrf)
 
 
 # Application definition
