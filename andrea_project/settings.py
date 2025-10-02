@@ -36,12 +36,18 @@ SECRET_KEY = (
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
 
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1,.railway.app,.up.railway.app').split(',')
+# Allow overriding via DJANGO_ALLOWED_HOSTS first, then ALLOWED_HOSTS; provide safe defaults
+ALLOWED_HOSTS = (
+    os.getenv('DJANGO_ALLOWED_HOSTS')
+    or os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1,.up.railway.app,.railway.app,andrea-production.up.railway.app')
+).split(',')
 
 # CSRF trusted origins (env-driven with safe defaults)
-CSRF_TRUSTED_ORIGINS = os.getenv(
-    'CSRF_TRUSTED_ORIGINS',
-    'https://*.railway.app,https://*.up.railway.app'
+CSRF_TRUSTED_ORIGINS = (
+    os.getenv(
+        'DJANGO_CSRF_TRUSTED_ORIGINS',
+        os.getenv('CSRF_TRUSTED_ORIGINS', 'https://*.up.railway.app,https://*.railway.app,https://andrea-production.up.railway.app')
+    )
 ).split(',')
 
 
@@ -169,13 +175,16 @@ LANGUAGE_CODE = 'tr'
 TIME_ZONE = 'Europe/Istanbul'
 
 # OpenRouter API Configuration
-OPENROUTER_API_KEY = os.getenv('OPENROUTER_API_KEY')
+# Fallback to OPENAI_API_KEY for local/dev convenience if specific key is absent
+OPENROUTER_API_KEY = os.getenv('OPENROUTER_API_KEY') or os.getenv('OPENAI_API_KEY')
 OPENROUTER_BASE_URL = os.getenv('OPENROUTER_BASE_URL', 'https://openrouter.ai/api/v1')
-OPENROUTER_MODEL = os.getenv('OPENROUTER_MODEL', 'openai/gpt-5')
+# Prefer a widely available default
+OPENROUTER_MODEL = os.getenv('OPENROUTER_MODEL', 'openrouter/auto')
 
 # Security and proxy headers for Railway
 # Ensure Django recognizes the original protocol behind the proxy
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+USE_X_FORWARDED_HOST = True
 
 # Log to stdout so platform logs capture Django errors
 LOGGING = {
