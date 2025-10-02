@@ -17,6 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from django.http import HttpResponse
+from django.contrib.auth.decorators import login_required
 from django.conf import settings
 from django.conf.urls.static import static
 from users.views import home_view, login_view, logout_view
@@ -24,6 +25,8 @@ from users.views import home_view, login_view, logout_view
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('health/', lambda _request: HttpResponse("ok")),
+    path('healthz/', lambda _request: HttpResponse("ok")),
+    path('whoami/', login_required(lambda r: HttpResponse(f"hi {r.user.username}"))),
     path('', home_view, name='home'),
     path('login/', login_view, name='login'),
     path('logout/', logout_view, name='logout'),

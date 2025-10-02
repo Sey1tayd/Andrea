@@ -1,7 +1,7 @@
 import openai
+import os
 from django.conf import settings
 import logging
-import requests
 
 logger = logging.getLogger(__name__)
 
@@ -14,9 +14,14 @@ class OpenRouterService:
         if not self.api_key:
             raise ValueError("OPENROUTER_API_KEY is not set in environment variables")
         
+        # Attach OpenRouter recommended headers for better routing and auth context
         self.client = openai.OpenAI(
             api_key=self.api_key,
-            base_url=self.base_url
+            base_url=self.base_url,
+            default_headers={
+                "HTTP-Referer": os.getenv("OPENROUTER_SITE_URL", "http://localhost"),
+                "X-Title": os.getenv("OPENROUTER_APP_NAME", "Andrea Chat"),
+            },
         )
 
     def chat(self, messages, *, model=None, temperature=None, max_tokens=None, fallback_model=None):
@@ -50,6 +55,11 @@ class OpenRouterService:
                 else:
                     return "Seçtiğin model şu an kullanılamıyor. Varsayılanla devam ettim."
             else:
+                # Detect 401 Unauthorized to guide configuration fixes
+                status = getattr(getattr(e, 'response', None), 'status_code', None)
+                if status == 401:
+                    logger.error("OpenRouter API 401 Unauthorized. Check OPENROUTER_API_KEY and base URL.")
+                    return "Üzgünüm, kimlik doğrulama sorunu oluştu. Lütfen daha sonra tekrar deneyin."
                 logger.error(f"OpenRouter API error: {str(e)}")
                 return "Üzgünüm, şu anda bir hata oluştu. Lütfen daha sonra tekrar deneyin."
 
