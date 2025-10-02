@@ -116,6 +116,10 @@ else:
         }
     }
 
+# --- Diagnostics: print active DB backend (temporary) ---
+print("DB ENGINE =", DATABASES["default"]["ENGINE"])  # e.g., django.db.backends.postgresql
+print("DB NAME   =", DATABASES["default"].get("NAME") or os.getenv('DATABASE_URL') or os.getenv('RAILWAY_DATABASE_URL'))
+
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
